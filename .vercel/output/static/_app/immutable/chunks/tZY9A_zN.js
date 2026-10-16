@@ -1,0 +1,1 @@
+import{a as e}from"./C7W1uNT4.js";const a=()=>e("/users/me"),r=s=>e("/users/me",{method:"PUT",body:JSON.stringify(s)}),n=s=>{const o=new FormData;return o.append("photo",s),e("/users/me/photo",{method:"POST",body:o})},d=(s,o)=>e("/users/me/password",{method:"PUT",body:JSON.stringify({old_password:s,new_password:o})}),m=()=>e("/users");export{n as a,d as c,a as g,m as l,r as u};
