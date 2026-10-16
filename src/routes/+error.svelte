@@ -1,0 +1,1 @@
+<script lang="ts">import { page } from '$app/state';import { GraduationCap } from 'lucide-svelte';</script><main class="auth-page"><section class="auth-card error-card"><GraduationCap size={42}/><h1>Halaman tidak ditemukan</h1><p>Kode kesalahan: {page.status}</p><a class="primary" href="/">Kembali ke beranda</a></section></main>

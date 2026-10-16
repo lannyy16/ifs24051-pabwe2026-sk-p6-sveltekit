@@ -1,0 +1,1 @@
+<script lang="ts">import './app.css'; let {children} = $props();</script><svelte:head><title>Delcom Courses</title><meta name="description" content="Platform belajar dan berbagi kursus"/></svelte:head>{@render children()}
