@@ -1,7 +1,8 @@
 
-const BASE_URL =
+const BASE_URL = (
   import.meta.env.VITE_DELCOM_BASEURL ||
-  'https://open-api.delcom.org/api/v1';
+  'https://open-api.delcom.org/api/v1'
+).replace(/\/+$/, '');
 
 export function getToken(): string {
   if (typeof localStorage === 'undefined') {
@@ -24,6 +25,33 @@ export function clearToken(): void {
   }
 }
 
+function getApiErrorMessage(body: any): string {
+  const message =
+    typeof body?.message === 'string' && body.message.trim()
+      ? body.message
+      : '';
+
+  const data = body?.data;
+
+  let details = '';
+
+  if (data && typeof data === 'object') {
+    details = Object.values(data)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .filter(
+        (value): value is string =>
+          typeof value === 'string' && value.length > 0
+      )
+      .join(', ');
+  }
+
+  if (message && details) {
+    return `${message}: ${details}`;
+  }
+
+  return message || details;
+}
+
 export async function apiRequest<T = any>(
   path: string,
   options: RequestInit = {}
@@ -31,32 +59,59 @@ export async function apiRequest<T = any>(
   const headers = new Headers(options.headers || {});
   const token = getToken();
 
+  headers.set('Accept', 'application/json');
+
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  const isFormData =
+    typeof FormData !== 'undefined' &&
+    options.body instanceof FormData;
+
   if (
-    !(options.body instanceof FormData) &&
     options.body &&
+    !isFormData &&
     !headers.has('Content-Type')
   ) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers
-  });
+  let response: Response;
 
-  const body = await response.json().catch(() => ({}));
-
-  if (!response.ok || body?.success === false) {
+  try {
+    response = await fetch(
+      `${BASE_URL}/${path.replace(/^\/+/, '')}`,
+      {
+        ...options,
+        headers
+      }
+    );
+  } catch {
     throw new Error(
-      body?.message || `Request gagal (${response.status})`
+      'Tidak dapat terhubung ke server. Periksa koneksi internet dan alamat API.'
     );
   }
 
-  return body as T;
+  const body = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message = getApiErrorMessage(body);
+
+    throw new Error(
+      message || `Request gagal (${response.status})`
+    );
+  }
+
+  if (body?.status === 'fail' || body?.success === false) {
+    const message = getApiErrorMessage(body);
+
+    throw new Error(
+      message || `Request gagal (${response.status})`
+    );
+  }
+
+  return (body ?? {}) as T;
 }
 
 export function queryString(
