@@ -1,8 +1,15 @@
 
-const BASE_URL = (
-  import.meta.env.VITE_DELCOM_BASEURL ||
-  'https://open-api.delcom.org/api/v1'
-).replace(/\/+$/, '');
+function getBaseUrl(): string {
+  const envBaseUrl = import.meta.env.VITE_DELCOM_BASEURL;
+
+  if (envBaseUrl) {
+    return envBaseUrl.replace(/\/+$/, '');
+  }
+
+  return 'https://open-api.delcom.org/api/v1';
+}
+
+const BASE_URL = getBaseUrl();
 
 export function getToken(): string {
   if (typeof localStorage === 'undefined') {

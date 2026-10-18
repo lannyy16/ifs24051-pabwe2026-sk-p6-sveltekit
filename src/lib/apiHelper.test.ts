@@ -314,7 +314,9 @@ describe('apiHelper', () => {
         })
       );
 
-      await expect(apiRequest('users')).rejects.toThrow('Email tidak valid');
+      await expect(apiRequest('users')).rejects.toThrow(
+        'Email tidak valid'
+      );
     });
 
     it('mengabaikan detail error yang bukan string', async () => {
@@ -491,6 +493,26 @@ describe('apiHelper - BASE_URL', () => {
 
   it('menggunakan URL default ketika environment variable kosong', async () => {
     vi.stubEnv('VITE_DELCOM_BASEURL', '');
+    vi.resetModules();
+
+    const { apiRequest } = await import('./apiHelper');
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ status: 'success' })
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+    await apiRequest('users');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://open-api.delcom.org/api/v1/users'
+    );
+  });
+
+  it('menggunakan URL default ketika environment variable undefined', async () => {
+    vi.stubEnv('VITE_DELCOM_BASEURL', undefined);
     vi.resetModules();
 
     const { apiRequest } = await import('./apiHelper');
